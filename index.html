@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metropolitan Museum of Art Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.css">
+    <style>
+        /* Reset and basic styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            width: 100%;
+            text-align: center;
+            margin: 0;
+        }
+        
+        /* Search and country selector */
+        #searchForm {
+            margin: 1rem auto;
+            text-align: center;
+        }
+        
+        #keywordInput, #countrySelect {
+            margin: 0 0.5rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        /* Search results container */
+        #results {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 1rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        /* Individual artifact card */
+        .object-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 1rem;
+            padding: 1rem;
+            width: calc(33% - 2rem);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Aligns content vertically */
+        }
+        
+        .object-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .object-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px; /* Rounded corners for images */
+            margin-bottom: 0.5rem; /* Adjust margin for better spacing */
+        }
+        
+        .object-card h2 {
+            font-size: 1rem; /* Reduced font size for title */
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+        
+        .object-card p {
+            margin: 0.5rem 0;
+            text-align: center;
+            font-size: 0.8rem; /* Reduced font size for artist */
+        }
+        
+        .object-card a {
+            display: block;
+            text-align: center;
+            color: #0066cc;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .object-card a:hover {
+            color: #004499;
+        }
+        
+        /* Date filter container */
+        #dateFilterContainer {
+            width: 80%;
+            margin: 2rem auto;
+            text-align: center;
+        }
+        
+        #dateSlider {
+            margin-top: 1rem;
+        }
+        
+        #dateValues {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Scroll to top button */
+        #goUpBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 20%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        
+        #goUpBtn:hover {
+            background-color: #555;
+        }
+        
+#searchBtn {
+    background-color: #4CAF50; /* A pleasant green color */
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 25px; /* Rounded corners */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Subtle shadow for depth */
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#searchBtn:hover {
+    background-color: #45a049; /* Darker shade on hover */
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); /* Increased shadow on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+#searchBtn:active {
+    background-color: #3e8e41; /* Even darker shade when clicked */
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.2); /* Reduced shadow when clicked */
+    transform: translateY(0); /* Remove lift effect when clicked */
+}
+        
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .object-card {
+                width: calc(50% - 2rem);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .object-card {
+                width: calc(100% - 2rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Recherche d'Artefacts du Met</h1>
+    
+    <!-- Search and country selector -->
+    <form id="searchForm">
+        <input type="text" id="keywordInput" placeholder="Mot-clé...">
+        <select id="countrySelect">
+            <option value="">Tous les pays</option>
+            <option value="France">France</option>
+            <option value="Italy">Italy</option>
+            <option value="United States">United States</option>
+            <!-- Add more options as needed -->
+        </select>
+        <button id="searchBtn" type="button" onclick="performSearch()">Rechercher</button>
+    </form>
+    
+    <div id="dateFilterContainer">
+        <label for="dateSlider">Filtrer par date :</label>
+        <div id="dateSlider"></div>
+        <div id="dateValues">
+            <span id="dateMin"></span>
+            <span id="dateMax"></span>
+        </div>
+    </div>
+    <div id="results"></div>
+    <button id="goUpBtn" onclick="scrollToTop()">↑</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.6.0/nouislider.min.js"></script>
+    <script>
+        let currentPage = 0;
+        const pageSize = 20;
+        let objectIDs = [];
+        let dateSlider;
+
+        async function searchMetObjects(keyword, country, dateRange) {
+            let searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?q=${keyword}&dateBegin=${dateRange[0]}&dateEnd=${dateRange[1]}&hasImages=true`;
+            
+            // Append country parameter if selected
+            if (country) {
+                searchUrl += `&geoLocation=${country}`;
+            }
+            
+            try {
+                // Request to fetch object IDs based on search criteria
+                const searchResponse = await fetch(searchUrl);
+                const searchData = await searchResponse.json();
+                
+                if (!searchData.objectIDs || searchData.objectIDs.length === 0) {
+                    console.log('Aucun objet trouvé pour ce mot-clé et cette plage de dates.');
+                    return;
+                }
+
+                objectIDs = searchData.objectIDs;
+                loadMoreObjects();
+                
+            } catch (error) {
+                console.error('Erreur lors de la récupération des objets:', error);
+            }
+        }
+
+        async function loadMoreObjects() {
+            const start = currentPage * pageSize;
+            const end = start + pageSize;
+            const currentBatch = objectIDs.slice(start, end);
+            
+            // Request to fetch details of each object
+            const objectsDetails = await Promise.all(currentBatch.map(async (objectId) => {
+                const detailsUrl = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectId}`;
+                const detailsResponse = await fetch(detailsUrl);
+                const detailsData = await detailsResponse.json();
+                return detailsData;
+            }));
+            
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            objectsDetails.forEach(object => {
+                if (object.primaryImage) {
+                    const objectCard = document.createElement('div');
+                    objectCard.className = 'object-card';
+                    objectCard.innerHTML = `
+                        <img src="${object.primaryImage}" alt="${object.title}">
+                        <h2>${object.title}</h2>
+                        <p>${object.objectDate}</p>
+                        <p><a href="${object.objectURL}" target="_blank">Voir l'objet</a></p>
+                    `;
+                    resultsDiv.appendChild(objectCard);
+                }
+            });
+            currentPage++;
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function initDateSlider() {
+            const dateSliderElement = document.getElementById('dateSlider');
+            dateSlider = noUiSlider.create(dateSliderElement, {
+                start: [0, 2025], // Default values
+                connect: true,
+                range: {
+                    'min': 0,
+                    'max': 2025
+                },
+                step: 1,
+                tooltips: true,
+                format: {
+                    to: value => parseInt(value),
+                    from: value => parseInt(value)
+                }
+            });
+
+            const dateValuesElement = document.getElementById('dateValues');
+            dateSlider.on('update', function (values, handle) {
+                if (handle === 0) {
+                    document.getElementById('dateMin').textContent = `De ${values[0]}`;
+                }
+                if (handle === 1) {
+                    document.getElementById('dateMax').textContent = `À ${values[1]}`;
+                }
+            });
+
+            dateSlider.on('change', function (values, handle) {
+                const dateRange = [parseInt(values[0]), parseInt(values[1])];
+                currentPage = 0;
+                clearResults();
+                const keyword = document.getElementById('keywordInput').value;
+                const country = document.getElementById('countrySelect').value;
+                searchMetObjects(keyword, country, dateRange);
+            });
+        }
+
+        function clearResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+        }
+
+        function performSearch() {
+            currentPage = 0;
+            clearResults();
+            const keyword = document.getElementById('keywordInput').value;
+            const country = document.getElementById('countrySelect').value;
+            const dateRange = dateSlider.get();
+            searchMetObjects(keyword, country, dateRange);
+        }
+
+        // Infinite scroll
+        window.addEventListener('scroll', function() {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            if (scrollTop + clientHeight >= scrollHeight - 5) {
+                loadMoreObjects();
+            }
+            
+            // Show/hide scroll to top button
+            const goUpBtn = document.getElementById('goUpBtn');
+            if (scrollTop > 300) {
+                goUpBtn.style.display = 'block';
+            } else {
+                goUpBtn.style.display = 'none';
+            }
+        });
+
+        window.onload = function () {
+            initDateSlider();
+            searchMetObjects('', '', [0, 2025]); // Initial search with full date range
+        };
+    </script>
+</body>
+</html>
+
